@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitGraph Sentinel | Autonomous FalkorDB Code Security Agent</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Cytoscape Graph Engine -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <header class="topbar">
+        <div class="brand">
+            <div class="logo-icon">⚡</div>
+            <div class="brand-text">
+                <h1>GitGraph <span>Sentinel</span></h1>
+                <p class="tagline">FalkorDB Hackathon (Track 01: Agents That Act on Connected Data)</p>
+            </div>
+        </div>
+        
+        <div class="top-stats">
+            <!-- Scan Status Indicator -->
+            <div class="badge status-pill" id="scan-status-badge">
+                <span class="status-pulse-dot"></span>
+                <span id="scan-status-text">ANALYSIS COMPLETE</span>
+            </div>
+
+            <!-- Database Mode -->
+            <div class="badge db-pill" id="db-status">
+                <span class="db-icon">🗄️</span>
+                <span id="db-status-text">FalkorDB Engine</span>
+            </div>
+
+            <!-- Metrics -->
+            <div class="badge metric-badge">
+                <span id="node-count">24</span> Nodes &nbsp;|&nbsp; <span id="edge-count">47</span> Relationships
+            </div>
+
+            <button class="btn btn-secondary" id="btn-rescan" onclick="scanCodebase()">
+                <span class="spin-icon">🔄</span> Re-Scan Codebase
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Grid Workspace -->
+    <main class="main-layout">
+        <!-- Left / Center: Readable Graph Canvas -->
+        <section class="graph-section">
+            <div class="section-header">
+                <div class="header-left">
+                    <h2>🌐 Connected Codebase Graph</h2>
+                    <!-- Quick Node Search Filter -->
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="node-search" placeholder="Search node or file..." oninput="searchNodes(this.value)">
+                    </div>
+                </div>
+
+                <div class="graph-legend">
+                    <span class="legend-item"><span class="dot file"></span> File (Modules)</span>
+                    <span class="legend-item"><span class="dot route"></span> Route Handler</span>
+                    <span class="legend-item"><span class="dot func"></span> Function</span>
+                    <span class="legend-item"><span class="dot model"></span> Model (Sensitive)</span>
+                </div>
+            </div>
+
+            <!-- Interactive Graph Canvas -->
+            <div id="cy" class="graph-canvas"></div>
+
+            <!-- Node Full-Name Hover Tooltip -->
+            <div id="graph-tooltip" class="graph-tooltip hidden"></div>
+
+            <!-- Floating Graph Control Toolbar (Spaced & Polished) -->
+            <div class="graph-floating-toolbar">
+                <button class="tool-btn" onclick="zoomIn()" title="Zoom In (+)">➕</button>
+                <button class="tool-btn" onclick="zoomOut()" title="Zoom Out (−)">➖</button>
+                <button class="tool-btn" onclick="fitGraph()" title="Fit to Viewport">⛶ Fit</button>
+                <button class="tool-btn" onclick="switchLayout('tiered')" title="Tiered Left-to-Right Flow">☰ Flow</button>
+                <button class="tool-btn" onclick="resetGraphView()" title="Reset Focus & Filters">↺ Reset</button>
+            </div>
+
+            <!-- Bottom: Collapsible FalkorDB Cypher Inspector -->
+            <div class="cypher-inspector">
+                <div class="inspector-header" onclick="toggleInspector()">
+                    <div class="inspector-title">
+                        <span class="icon">⚡</span>
+                        <strong>FalkorDB Cypher Execution Inspector</strong>
+                        <span class="pill-count" id="query-count-badge">Queries Live</span>
+                    </div>
+                    <span class="inspector-toggle" id="inspector-chevron">▲ Collapse</span>
+                </div>
+                <div class="inspector-body" id="inspector-body">
+                    <div id="cypher-history-list" class="cypher-history-list"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Right: Agent Reasoner, Findings & Impact Center -->
+        <aside class="agent-panel">
+            <div class="panel-header">
+                <h2>🤖 Agent Reasoner & Actions</h2>
+                <span class="badge agent-badge">Track 01 Agent</span>
+            </div>
+
+            <!-- Section 1: Vulnerability Findings & Multi-Hop Triage -->
+            <div class="card panel-card">
+                <div class="card-title">
+                    <span class="icon">🛡️</span>
+                    <h3>Vulnerability Findings</h3>
+                    <span class="count-tag" id="finding-count-tag">1 Detected</span>
+                </div>
+                <p class="card-desc">Multi-hop Cypher queries cross-referenced with verified AST source code inspection.</p>
+                
+                <div class="triage-btn-bar">
+                    <button class="btn btn-primary w-100" id="btn-triage" onclick="runInvestigation()">
+                        ⚡ Re-Run Graph Triage
+                    </button>
+                </div>
+                
+                <div id="findings-container" class="findings-container">
+                    <!-- Populated automatically on load -->
+                </div>
+            </div>
+
+            <!-- Section 2: Visual Blast Radius Impact Engine -->
+            <div class="card panel-card">
+                <div class="card-title">
+                    <span class="icon">💥</span>
+                    <h3>Blast Radius Impact Engine</h3>
+                </div>
+                <p class="card-desc">Traverse reverse call trees in FalkorDB to evaluate downstream breaking impact before code changes.</p>
+                
+                <div class="input-group">
+                    <select id="blast-target" class="select-input" onchange="runBlastRadius()">
+                        <option value="verify_jwt">verify_jwt (auth.py)</option>
+                        <option value="process_refund">process_refund (payment.py)</option>
+                        <option value="LedgerModel.update_balance">LedgerModel.update_balance (db.py)</option>
+                        <option value="calculate_tax">calculate_tax (payment.py)</option>
+                        <option value="check_permission">check_permission (auth.py)</option>
+                    </select>
+                    <button class="btn btn-outline" onclick="runBlastRadius()">Scan Impact</button>
+                </div>
+
+                <div id="blast-results-container" class="blast-results-container">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Section 3: Informative Agent Timeline Action Log (Always Visible) -->
+            <div class="card panel-card log-card">
+                <div class="card-title">
+                    <span class="icon">📋</span>
+                    <h3>Agent Action Log & Reasoning Timeline</h3>
+                </div>
+                <div id="action-timeline" class="action-timeline">
+                    <!-- Timeline items -->
+                </div>
+            </div>
+        </aside>
+    </main>
+
+    <!-- Modal 1: Code Evidence Viewer -->
+    <div id="evidence-modal" class="modal-backdrop hidden">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <span class="icon">📜</span>
+                    <h3 id="evidence-title">Source Code Evidence</h3>
+                </div>
+                <button class="close-btn" onclick="closeModal('evidence-modal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="evidence-meta" id="evidence-meta"></div>
+                <p class="evidence-explanation" id="evidence-explanation"></p>
+                <div class="code-editor-preview">
+                    <pre><code id="evidence-code"></code></pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('evidence-modal')">Close</button>
+                <button class="btn btn-primary" onclick="switchToFixPreview()">🛡️ View Safe Fix</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal 2: Safe Fix Preview (Side-by-Side Reviewable Diff) -->
+    <div id="fix-modal" class="modal-backdrop hidden">
+        <div class="modal-box modal-wide">
+            <div class="modal-header">
+                <div class="modal-title-group">
+                    <span class="icon">🛡️</span>
+                    <h3>Safe Fix Preview (Reviewable Patch)</h3>
+                </div>
+                <button class="close-btn" onclick="closeModal('fix-modal')">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="fix-summary-box" id="fix-summary">
+                    <strong>Autonomous Remediation Plan:</strong> Injects JWT authentication middleware into the vulnerable route handler to verify caller credentials before touching sensitive financial models.
+                </div>
+                
+                <div class="diff-container">
+                    <div class="diff-pane original-pane">
+                        <div class="pane-title">❌ Original Code (Vulnerable)</div>
+                        <pre><code id="diff-original"></code></pre>
+                    </div>
+                    <div class="diff-pane patched-pane">
+                        <div class="pane-title">✅ Proposed Fix (Verified)</div>
+                        <pre><code id="diff-patched"></code></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeModal('fix-modal')">Cancel</button>
+                <button class="btn btn-action" id="btn-apply-patch" onclick="confirmApplyPatch()">
+                    ⚡ Apply Patch & Re-Verify Graph
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

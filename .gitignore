@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+*.pyc
+.env
+.DS_Store
+chrome_profile/
+video_assets/
+concat_list.txt
+narration.mp3
