@@ -16,11 +16,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     window.addEventListener('resize', () => {
         if (cy) {
             cy.resize();
-            cy.fit(null, 50);
+            cy.fit(null, 45);
         }
     });
 
-    // Close modals on Escape key (Craft floor accessibility)
+    // Close modals on Escape key
     window.addEventListener('keydown', (e) => {
         if (e.key === "Escape") {
             closeModal('evidence-modal');
@@ -29,15 +29,53 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
 });
 
-function setScanStatus(statusText, isReady = true) {
-    const textEl = document.getElementById("scan-status-text");
-    const badgeEl = document.getElementById("scan-status-badge");
-    if (textEl) textEl.innerText = statusText;
-    if (badgeEl) {
-        badgeEl.className = isReady ? "status-indicator ready" : "status-indicator";
+/**
+ * Sidebar Tab Switching
+ */
+function switchSidebarTab(tabName) {
+    const tabs = ['triage', 'blast', 'audit'];
+    tabs.forEach(t => {
+        const btn = document.getElementById(`btn-tab-${t}`);
+        const pane = document.getElementById(`pane-${t}`);
+        if (btn) btn.classList.toggle('active', t === tabName);
+        if (pane) pane.classList.toggle('active', t === tabName);
+    });
+}
+
+/**
+ * Status and Health Indicators
+ */
+function setPostureStatus(activeCount) {
+    const label = document.querySelector(".threat-label");
+    const dot = document.querySelector(".threat-dot");
+    const findingPill = document.getElementById("finding-count-tag");
+
+    if (activeCount > 0) {
+        if (label) label.innerText = `${activeCount} Active ${activeCount === 1 ? 'Vulnerability' : 'Vulnerabilities'}`;
+        if (dot) {
+            dot.className = "threat-dot alert";
+            dot.style.background = "var(--color-danger)";
+        }
+        if (findingPill) {
+            findingPill.innerText = activeCount;
+            findingPill.style.background = "var(--color-danger)";
+        }
+    } else {
+        if (label) label.innerText = "0 Active Threats • Compliant";
+        if (dot) {
+            dot.className = "threat-dot ok";
+            dot.style.background = "var(--color-success)";
+        }
+        if (findingPill) {
+            findingPill.innerText = "0";
+            findingPill.style.background = "var(--color-success)";
+        }
     }
 }
 
+/**
+ * Initialize Cytoscape with developer security styling
+ */
 function initCytoscape() {
     cy = cytoscape({
         container: document.getElementById('cy'),
@@ -48,129 +86,135 @@ function initCytoscape() {
                 selector: 'node',
                 style: {
                     'content': 'data(shortLabel)',
-                    'color': '#f8fafc',
-                    'font-family': 'Plus Jakarta Sans, sans-serif',
+                    'color': '#f4f4f6',
+                    'font-family': 'Inter, sans-serif',
                     'font-size': '10px',
-                    'font-weight': '600',
+                    'font-weight': '500',
                     'text-valign': 'bottom',
                     'text-margin-y': '6px',
                     'text-wrap': 'wrap',
-                    'text-max-width': '100px',
-                    'background-color': '#1e293b',
+                    'text-max-width': '110px',
+                    'background-color': '#16161c',
                     'border-width': 1.5,
-                    'border-color': 'rgba(255, 255, 255, 0.2)',
+                    'border-color': '#2e2e38',
                     'width': 34,
                     'height': 34,
-                    'text-outline-color': '#060912',
+                    'text-outline-color': '#09090b',
                     'text-outline-width': 2.5,
                     'transition-property': 'background-color, border-color, width, height, opacity',
-                    'transition-duration': '0.2s',
-                    'transition-timing-function': 'cubic-bezier(0.16, 1, 0.3, 1)'
+                    'transition-duration': '0.15s'
                 }
             },
             {
                 selector: 'node[type = "File"]',
                 style: {
-                    'background-color': '#2563eb',
+                    'background-color': '#1d4ed8',
+                    'border-color': '#3b82f6',
                     'shape': 'round-rectangle',
-                    'width': 48,
-                    'height': 30
+                    'width': 44,
+                    'height': 28
                 }
             },
             {
                 selector: 'node[type = "Function"]',
                 style: {
-                    'background-color': '#059669',
+                    'background-color': '#047857',
+                    'border-color': '#10b981',
                     'shape': 'ellipse',
-                    'width': 32,
-                    'height': 32
+                    'width': 30,
+                    'height': 30
                 }
             },
             {
                 selector: 'node[type = "RouteHandler"]',
                 style: {
-                    'background-color': '#d97706',
-                    'shape': 'hexagon',
-                    'width': 40,
-                    'height': 40
+                    'background-color': '#b45309',
+                    'border-color': '#f59e0b',
+                    'shape': 'round-hexagon',
+                    'width': 36,
+                    'height': 36
                 }
             },
             {
                 selector: 'node[type = "Model"]',
                 style: {
-                    'background-color': '#e11d48',
+                    'background-color': '#b91c1c',
+                    'border-color': '#ef4444',
                     'shape': 'diamond',
-                    'width': 42,
-                    'height': 42
+                    'width': 38,
+                    'height': 38
                 }
             },
-            /* Refined Connecting Edges */
             {
                 selector: 'edge',
                 style: {
                     'curve-style': 'bezier',
                     'width': 1.2,
                     'target-arrow-shape': 'triangle',
-                    'line-color': 'rgba(100, 116, 139, 0.28)',
-                    'target-arrow-color': 'rgba(100, 116, 139, 0.4)',
+                    'line-color': '#272732',
+                    'target-arrow-color': '#3f3f4e',
                     'arrow-scale': 0.7,
                     'label': 'data(type)',
                     'font-family': 'JetBrains Mono, monospace',
                     'font-size': '8px',
-                    'color': '#38bdf8',
+                    'color': '#71717a',
                     'text-rotation': 'autorotate',
-                    'text-margin-y': -7,
+                    'text-margin-y': -6,
                     'text-opacity': 0,
                     'transition-property': 'line-color, target-arrow-color, width, text-opacity, opacity',
-                    'transition-duration': '0.2s'
+                    'transition-duration': '0.15s'
                 }
             },
             {
                 selector: 'edge:selected, edge.active-edge',
                 style: {
                     'text-opacity': 1,
-                    'line-color': '#38bdf8',
-                    'target-arrow-color': '#38bdf8',
-                    'width': 2.2
+                    'line-color': '#3b82f6',
+                    'target-arrow-color': '#3b82f6',
+                    'color': '#93c5fd',
+                    'width': 2
                 }
             },
             {
                 selector: '.dimmed',
                 style: {
-                    'opacity': 0.08
+                    'opacity': 0.12
                 }
             },
             {
                 selector: '.attack-node',
                 style: {
-                    'background-color': '#f43f5e',
+                    'background-color': '#ef4444',
                     'border-color': '#ffffff',
-                    'border-width': 3,
-                    'width': 46,
-                    'height': 46,
-                    'opacity': 1
+                    'border-width': 2.5,
+                    'width': 44,
+                    'height': 44,
+                    'opacity': 1,
+                    'z-index': 99
                 }
             },
             {
                 selector: '.attack-edge',
                 style: {
-                    'line-color': '#f43f5e',
-                    'target-arrow-color': '#f43f5e',
-                    'width': 3.2,
+                    'line-color': '#ef4444',
+                    'target-arrow-color': '#ef4444',
+                    'width': 2.8,
                     'text-opacity': 1,
                     'color': '#fca5a5',
-                    'opacity': 1
+                    'opacity': 1,
+                    'z-index': 98
                 }
             },
             {
                 selector: '.blast-target',
                 style: {
-                    'background-color': '#f43f5e',
+                    'background-color': '#ef4444',
                     'border-color': '#ffffff',
-                    'border-width': 3,
-                    'width': 46,
-                    'height': 46,
-                    'opacity': 1
+                    'border-width': 2.5,
+                    'width': 44,
+                    'height': 44,
+                    'opacity': 1,
+                    'z-index': 99
                 }
             },
             {
@@ -178,10 +222,11 @@ function initCytoscape() {
                 style: {
                     'background-color': '#f97316',
                     'border-color': '#ffedd5',
-                    'border-width': 2.5,
-                    'width': 40,
-                    'height': 40,
-                    'opacity': 1
+                    'border-width': 2,
+                    'width': 36,
+                    'height': 36,
+                    'opacity': 1,
+                    'z-index': 90
                 }
             },
             {
@@ -189,10 +234,11 @@ function initCytoscape() {
                 style: {
                     'background-color': '#eab308',
                     'border-color': '#fef08a',
-                    'border-width': 2,
-                    'width': 36,
-                    'height': 36,
-                    'opacity': 1
+                    'border-width': 1.5,
+                    'width': 32,
+                    'height': 32,
+                    'opacity': 1,
+                    'z-index': 80
                 }
             }
         ]
@@ -217,12 +263,12 @@ function initCytoscape() {
         const renderedPos = node.renderedPosition();
 
         tooltip.innerHTML = `
-            <div style="font-weight: 700; color: #ffffff;">${d.label}</div>
-            <div style="color: #94a3b8; font-size: 0.68rem; margin-top: 2px;">
-                <span>Type:</span> <span style="color: #e2e8f0;">${d.type}</span> &bull; 
-                <span>File:</span> <span style="color: #e2e8f0;">${d.properties.file || d.properties.path || 'module'}</span>
+            <div style="font-weight: 600; color: #f4f4f6;">${d.label}</div>
+            <div style="color: #a1a1aa; font-size: 0.68rem; margin-top: 2px;">
+                <span>Type:</span> <span style="color: #e4e4e7;">${d.type}</span> &bull; 
+                <span>File:</span> <span style="color: #e4e4e7;">${d.properties.file || d.properties.path || 'module'}</span>
             </div>
-            ${d.properties.start_line ? `<div style="color: #94a3b8; font-size: 0.68rem;">Lines: ${d.properties.start_line}-${d.properties.end_line}</div>` : ''}
+            ${d.properties.start_line ? `<div style="color: #71717a; font-size: 0.65rem; font-family: monospace;">Lines: ${d.properties.start_line}-${d.properties.end_line}</div>` : ''}
         `;
         tooltip.style.left = `${renderedPos.x + 18}px`;
         tooltip.style.top = `${renderedPos.y - 12}px`;
@@ -261,9 +307,13 @@ async function loadStatus() {
         const res = await fetch("/api/status");
         const data = await res.json();
         
-        document.getElementById("db-status-text").innerText = data.mode;
-        document.getElementById("node-count").innerText = data.nodes;
-        document.getElementById("edge-count").innerText = data.edges;
+        const dbStatusEl = document.getElementById("db-status-text");
+        if (dbStatusEl) dbStatusEl.innerText = data.mode || "FalkorDB Connected";
+
+        const summaryEl = document.getElementById("node-edge-summary");
+        if (summaryEl) {
+            summaryEl.innerText = `${data.nodes} Nodes • ${data.edges} Edges`;
+        }
     } catch (e) {
         console.error("Status fetch error:", e);
     }
@@ -295,25 +345,23 @@ async function loadQueryHistory() {
 
 function renderQueryHistory(queries) {
     const list = document.getElementById("cypher-history-list");
-    const countBadge = document.getElementById("query-count-badge");
-    countBadge.innerText = `${queries.length} Queries Recorded`;
+    if (!list) return;
 
     if (!queries || queries.length === 0) {
-        list.innerHTML = `<div style="color: #64748b; font-size: 0.68rem;">No Cypher queries recorded yet.</div>`;
+        list.innerHTML = `<div style="color: #71717a; font-size: 0.68rem; padding: 4px;">No Cypher queries executed yet.</div>`;
         return;
     }
 
     list.innerHTML = queries.map(q => `
         <div class="query-entry">
-            <code>${q.query}</code>
+            <code>${escapeHtml(q.query)}</code>
             <span class="query-meta">${q.duration_ms}ms &bull; ${q.records} records [${q.timestamp}]</span>
         </div>
     `).join("");
 }
 
 async function scanCodebase() {
-    setScanStatus("SCANNING REPO...", false);
-    addTimelineStep("Codebase Scan", "Parsing Python AST and indexing graph...", "info");
+    addTimelineStep("Codebase AST Scan", "Parsing Python abstract syntax trees into graph...", "info");
     try {
         const res = await fetch("/api/scan", { method: "POST" });
         const data = await res.json();
@@ -321,16 +369,15 @@ async function scanCodebase() {
         renderCytoscape(data.graph);
         await loadStatus();
         await loadQueryHistory();
-        addTimelineStep("FalkorDB Synced", `Indexed ${data.ingest_result.node_count} nodes & ${data.ingest_result.edge_count} relationships (${data.ingest_result.ingest_time_ms}ms)`, "action");
-        setScanStatus("ANALYSIS COMPLETE", true);
+        addTimelineStep("AST Synchronized", `Indexed ${data.ingest_result.node_count} entities & ${data.ingest_result.edge_count} relations (${data.ingest_result.ingest_time_ms}ms)`, "action");
+        await runInvestigation();
     } catch (e) {
         addTimelineStep("Scan Failed", e.toString(), "alert");
-        setScanStatus("SCAN FAILED", false);
     }
 }
 
 /**
- * 🌟 Spaced Tiered Architectural Column Layout
+ * Spaced Tiered Architectural Column Layout
  */
 function applyTieredLayout() {
     if (!cy) return;
@@ -342,17 +389,17 @@ function applyTieredLayout() {
 
     const colX = {
         files: 60,
-        routes: 300,
-        functions: 560,
-        models: 820
+        routes: 280,
+        functions: 520,
+        models: 760
     };
 
     function layoutColumn(collection, x) {
         const count = collection.length;
         if (count === 0) return;
-        const totalHeight = 520;
+        const totalHeight = 480;
         const step = count > 1 ? totalHeight / (count - 1) : totalHeight / 2;
-        const startY = 40;
+        const startY = 50;
 
         collection.forEach((node, idx) => {
             node.position({
@@ -413,12 +460,6 @@ function renderCytoscape(graphData) {
     applyTieredLayout();
 }
 
-function switchLayout(mode) {
-    if (mode === 'tiered') {
-        applyTieredLayout();
-    }
-}
-
 function searchNodes(query) {
     if (!cy) return;
     resetGraphView();
@@ -434,10 +475,11 @@ function searchNodes(query) {
     }
 }
 
-// 🛡️ Multi-Hop Investigation (Evidence-Based)
+/**
+ * Multi-Hop Investigation (Evidence-Based Snyk/GitHub Security Display)
+ */
 async function runInvestigation() {
-    setScanStatus("TRIAGING GRAPH...", false);
-    addTimelineStep("Agent Reasoning", "Executing Cypher: (r:RouteHandler {has_auth: false})-[:CALLS*]->(m:Model)", "info");
+    addTimelineStep("Agent Cypher Evaluation", "Querying: MATCH (r:RouteHandler {has_auth: false})-[:CALLS*]->(m:Model {sensitive: true})", "info");
     const container = document.getElementById("findings-container");
 
     try {
@@ -450,85 +492,86 @@ async function runInvestigation() {
             data.timeline.forEach(t => addTimelineStep(t.title, t.detail, t.level));
         }
 
-        if (data.findings.length === 0) {
+        const count = data.findings ? data.findings.length : 0;
+        setPostureStatus(count);
+
+        if (count === 0) {
             container.innerHTML = `
-                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; padding: 10px 12px; font-size: 0.74rem; color: #6ee7b7;">
-                    <strong>All Access Paths Verified:</strong> Zero unauthenticated routes reaching sensitive models.
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 6px; padding: 14px; font-size: 0.74rem; color: #a7f3d0; line-height: 1.5;">
+                    <div style="display: flex; align-items: center; gap: 6px; font-weight: 600; margin-bottom: 4px; color: #6ee7b7;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Zero Exposed Ingress Routes
+                    </div>
+                    All multi-hop execution paths to sensitive models require validated authentication token claims.
                 </div>
             `;
-            const tag = document.getElementById("finding-count-tag");
-            tag.innerText = "0 Detected";
-            tag.className = "badge-alert";
-            tag.style.background = "rgba(16, 185, 129, 0.15)";
-            tag.style.color = "#6ee7b7";
-            tag.style.borderColor = "rgba(16, 185, 129, 0.3)";
-            setScanStatus("VERIFIED SECURE", true);
             return;
         }
 
         activeFinding = data.findings[0];
-        const tag = document.getElementById("finding-count-tag");
-        tag.innerText = `${data.findings.length} Detected`;
-        tag.className = "badge-alert";
 
         let html = "";
         data.findings.forEach((f, idx) => {
+            const attackSteps = (f.attack_path || []).map((step, sIdx) => {
+                const isFirst = sIdx === 0;
+                const isLast = sIdx === f.attack_path.length - 1;
+                return `
+                    <div class="step-row">
+                        <span class="step-badge">${sIdx + 1}</span>
+                        <span class="step-text ${isLast ? 'target' : ''}">
+                            ${isFirst ? 'Ingress: ' : (isLast ? 'Sink: ' : 'Call: ')}
+                            <strong>${escapeHtml(step)}</strong>
+                        </span>
+                    </div>
+                `;
+            }).join("");
+
             html += `
-                <div class="finding-card">
-                    <div class="finding-head">
-                        <span class="finding-title">Potential Vulnerability Detected</span>
-                        <span class="severity-pill">${f.severity}</span>
+                <div class="finding-item">
+                    <div class="finding-header">
+                        <span class="cve-id">${f.id} &bull; CWE-306</span>
+                        <span class="severity-chip">${f.severity}</span>
                     </div>
 
-                    <div class="finding-table">
-                        <div class="finding-row">
-                            <span class="finding-label">Entry Point:</span>
-                            <span class="finding-val danger">${f.entry_point}</span>
-                        </div>
-                        <div class="finding-row">
-                            <span class="finding-label">Affected Resource:</span>
-                            <span class="finding-val">${f.sensitive_resource}</span>
-                        </div>
-                        <div class="finding-row">
-                            <span class="finding-label">Issue:</span>
-                            <span class="finding-val">Missing authorization check</span>
-                        </div>
-                        <div class="finding-row">
-                            <span class="finding-label">Confidence:</span>
-                            <span class="finding-val success">${Math.round(f.confidence * 100)}% (AST Verified)</span>
-                        </div>
-                        <div class="finding-row">
-                            <span class="finding-label">Evidence:</span>
-                            <span class="finding-val">${f.entry_file}:${f.entry_lines}</span>
-                        </div>
+                    <div class="finding-title-text">
+                        Missing Authentication on Sensitive Financial Operation
                     </div>
 
-                    <div class="finding-actions-grid">
-                        <button class="btn btn-secondary" onclick="viewEvidence(${idx})">
-                            View Evidence
+                    <div class="attack-stepper">
+                        ${attackSteps}
+                    </div>
+
+                    <div style="font-size: 0.7rem; color: var(--text-secondary); line-height: 1.4;">
+                        <span style="color: var(--text-muted);">Source Evidence:</span> <code>${f.entry_file}:${f.entry_lines}</code> &bull; 
+                        <span style="color: var(--color-success); font-weight: 500;">${Math.round(f.confidence * 100)}% AST Verified</span>
+                    </div>
+
+                    <div class="finding-actions">
+                        <button class="btn-secondary-sm" onclick="viewEvidence(${idx})">
+                            Inspect Code
                         </button>
-                        <button class="btn btn-outline" onclick="showAttackPath(${idx})">
-                            Show Attack Path
+                        <button class="btn-secondary-sm" onclick="showAttackPath(${idx})">
+                            Isolate Path
                         </button>
                     </div>
 
-                    <button class="btn btn-action w-100" style="margin-top: 8px; font-size: 0.72rem;" onclick="openFixPreview(${idx})">
-                        Review & Apply Safe Fix
+                    <button class="btn-action-primary" onclick="openFixPreview(${idx})">
+                        Review Safe Patch Proposal
                     </button>
                 </div>
             `;
         });
 
         container.innerHTML = html;
-        setScanStatus("ANALYSIS COMPLETE", true);
 
     } catch (e) {
         addTimelineStep("Investigation Error", e.toString(), "alert");
-        setScanStatus("ANALYSIS FAILED", false);
     }
 }
 
-// 🎯 Show Attack Path
+/**
+ * Show Attack Path on Canvas
+ */
 function showAttackPath(index) {
     if (!currentInvestigation || !currentInvestigation.findings[index]) return;
     const f = currentInvestigation.findings[index];
@@ -563,26 +606,32 @@ function showAttackPath(index) {
                 eles: cy.collection(pathNodes),
                 padding: 60
             },
-            duration: 350
+            duration: 300
         });
     }
 }
 
-// View Evidence Modal
+/**
+ * View Source AST Evidence Modal
+ */
 function viewEvidence(index) {
     if (!currentInvestigation || !currentInvestigation.findings[index]) return;
     const f = currentInvestigation.findings[index];
     activeFinding = f;
 
-    document.getElementById("evidence-title").innerText = `${f.id} Evidence: ${f.entry_point}`;
-    document.getElementById("evidence-meta").innerText = `Source File: ${f.entry_file} (Lines ${f.entry_lines}) | Confidence: ${Math.round(f.confidence * 100)}%`;
+    document.getElementById("evidence-title").innerText = `${f.entry_file} (${f.entry_point})`;
+    document.getElementById("evidence-meta").innerHTML = `
+        <span style="font-family: monospace; color: var(--text-secondary); font-size: 0.72rem;">File: ${f.entry_file} | Lines: ${f.entry_lines} | AST Verified Confidence: ${Math.round(f.confidence * 100)}%</span>
+    `;
     document.getElementById("evidence-explanation").innerText = f.evidence_explanation;
     document.getElementById("evidence-code").innerText = f.evidence_snippet;
 
     document.getElementById("evidence-modal").classList.remove("hidden");
 }
 
-// Safe Fix Preview Modal
+/**
+ * Safe Fix Proposal Modal
+ */
 function openFixPreview(index) {
     if (!currentInvestigation || !currentInvestigation.findings[index]) return;
     const f = currentInvestigation.findings[index];
@@ -607,8 +656,7 @@ async function confirmApplyPatch() {
     if (!activeFinding) return;
     closeModal("fix-modal");
     
-    setScanStatus("APPLYING PATCH...", false);
-    addTimelineStep("Patch Injection", `Injecting verified JWT verification middleware into '${activeFinding.entry_point}'...`, "info");
+    addTimelineStep("Patch Injected", `Applying verified token validation patch to '${activeFinding.entry_point}'...`, "info");
     
     try {
         const res = await fetch("/api/act", {
@@ -621,7 +669,7 @@ async function confirmApplyPatch() {
         });
         const data = await res.json();
 
-        addTimelineStep("Remediation Complete", `${data.pr_status} on ${data.target_file}`, "action");
+        addTimelineStep("Remediation Verified", `${data.pr_status} on ${data.target_file}`, "action");
 
         if (data.updated_graph) {
             currentGraphData = data.updated_graph;
@@ -632,18 +680,22 @@ async function confirmApplyPatch() {
 
         setTimeout(() => {
             runInvestigation();
-        }, 800);
+        }, 700);
 
     } catch (e) {
         addTimelineStep("Patch Error", e.toString(), "alert");
     }
 }
 
-// 💥 Blast Radius Engine
+/**
+ * Blast Radius Engine
+ */
 async function runBlastRadius() {
-    const target = document.getElementById("blast-target").value;
+    const targetSelect = document.getElementById("blast-target");
+    if (!targetSelect) return;
+    const target = targetSelect.value;
     resetGraphView();
-    addTimelineStep("Blast Radius Query", `Traversing reverse dependencies for '${target}' in FalkorDB`, "info");
+    addTimelineStep("Blast Radius Evaluated", `Calculating reverse dependencies for '${target}' in FalkorDB`, "info");
 
     try {
         const res = await fetch(`/api/blast-radius?target=${encodeURIComponent(target)}`);
@@ -651,9 +703,10 @@ async function runBlastRadius() {
         loadQueryHistory();
 
         const container = document.getElementById("blast-results-container");
+        if (!container) return;
 
         if (data.error) {
-            container.innerHTML = `<p style="color: #f87171; font-size: 0.72rem;">${data.error}</p>`;
+            container.innerHTML = `<p style="color: #ef4444; font-size: 0.72rem;">${data.error}</p>`;
             return;
         }
 
@@ -679,41 +732,37 @@ async function runBlastRadius() {
             highlightedElements.push(node);
         });
 
-        const riskClass = data.risk_level === "CRITICAL" ? "risk-critical" : (data.risk_level === "HIGH" ? "risk-high" : "risk-low");
-
         container.innerHTML = `
-            <div class="blast-summary-card">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <strong style="font-size: 0.78rem; color: #ffffff;">Target: ${target}()</strong>
-                    <span class="risk-badge ${riskClass}">${data.risk_level} RISK</span>
+            <div class="blast-metrics-box">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <strong style="font-size: 0.76rem; color: #ffffff; font-family: var(--font-mono);">${target}()</strong>
+                    <span class="severity-chip" style="font-size: 0.62rem;">${data.risk_level} IMPACT</span>
                 </div>
                 
                 <div class="blast-grid">
-                    <div class="blast-stat-box">
-                        <div class="blast-stat-number">${data.direct_count}</div>
-                        <div class="blast-stat-label">Direct Dependents</div>
+                    <div class="blast-stat">
+                        <div class="num">${data.direct_count}</div>
+                        <div class="lbl">Direct Dependents</div>
                     </div>
-                    <div class="blast-stat-box">
-                        <div class="blast-stat-number">${data.indirect_count}</div>
-                        <div class="blast-stat-label">Indirect Dependents</div>
+                    <div class="blast-stat">
+                        <div class="num">${data.indirect_count}</div>
+                        <div class="lbl">Indirect Callers</div>
                     </div>
-                    <div class="blast-stat-box">
-                        <div class="blast-stat-number">${data.affected_routes.length}</div>
-                        <div class="blast-stat-label">Affected Routes</div>
+                    <div class="blast-stat">
+                        <div class="num">${data.affected_routes.length}</div>
+                        <div class="lbl">Affected Routes</div>
                     </div>
-                    <div class="blast-stat-box">
-                        <div class="blast-stat-number">${data.affected_models.length}</div>
-                        <div class="blast-stat-label">Affected Models</div>
+                    <div class="blast-stat">
+                        <div class="num">${data.affected_models.length}</div>
+                        <div class="lbl">Affected Models</div>
                     </div>
                 </div>
 
-                <div style="font-size: 0.7rem; color: var(--text-secondary); line-height: 1.35; margin-top: 4px;">
-                    <span style="color: var(--text-muted);">Downstream Impact:</span> ${data.risk_reason}
+                <div style="font-size: 0.7rem; color: var(--text-secondary); line-height: 1.4; margin-top: 6px;">
+                    <span style="color: var(--text-muted);">Impact Rationale:</span> ${data.risk_reason}
                 </div>
             </div>
         `;
-
-        addTimelineStep("Blast Radius Computed", `Target: '${target}' affects ${data.total_impact_count} components (${data.risk_level} Risk)`, "action");
 
         if (highlightedElements.length > 0) {
             cy.animate({
@@ -721,7 +770,7 @@ async function runBlastRadius() {
                     eles: cy.collection(highlightedElements),
                     padding: 55
                 },
-                duration: 350
+                duration: 300
             });
         }
 
@@ -730,19 +779,21 @@ async function runBlastRadius() {
     }
 }
 
-// Timeline Helper
+/**
+ * Agent Audit Log Helper
+ */
 function addTimelineStep(title, detail, level = "info") {
     const timeline = document.getElementById("action-timeline");
     if (!timeline) return;
 
     const item = document.createElement("div");
-    item.className = `timeline-item ${level}`;
+    item.className = `audit-item ${level}`;
     const time = new Date().toLocaleTimeString();
 
     item.innerHTML = `
-        <span class="timeline-time">[${time}]</span>
-        <div class="timeline-content">
-            <strong style="color: #ffffff;">${title}:</strong> ${detail}
+        <span class="audit-time">[${time}]</span>
+        <div class="audit-msg">
+            <strong>${escapeHtml(title)}:</strong> ${escapeHtml(detail)}
         </div>
     `;
     timeline.prepend(item);
@@ -774,15 +825,30 @@ function zoomOut() {
 
 function toggleInspector() {
     const body = document.getElementById("inspector-body");
-    body.classList.toggle("hidden");
+    if (body) body.classList.toggle("hidden");
 }
 
 function closeModal(modalId) {
-    document.getElementById(modalId).classList.add("hidden");
+    const el = document.getElementById(modalId);
+    if (el) el.classList.add("hidden");
 }
 
 function handleBackdropClick(event, modalId) {
     if (event.target.id === modalId) {
         closeModal(modalId);
     }
+}
+
+function setActiveTab(tab) {
+    // Currently graph is always visible
+}
+
+function escapeHtml(str) {
+    if (!str) return "";
+    return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
 }

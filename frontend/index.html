@@ -3,281 +3,238 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitGraph Sentinel | Autonomous FalkorDB Code Security Agent</title>
+    <title>GitGraph Sentinel &bull; Codebase Security & Impact Engine</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Cytoscape Graph Engine -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.28.1/cytoscape.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
-<body>
-    <!-- Top Navigation Bar -->
-    <header class="topbar">
-        <div class="brand">
-            <div class="logo-mark">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                </svg>
-            </div>
-            <div class="brand-text">
-                <h1>GitGraph Sentinel</h1>
-                <p class="tagline">FalkorDB Hackathon &bull; Track 01: Agents That Act on Connected Data</p>
+<body class="theme-dark">
+    <!-- Production App Shell Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <!-- App Brand & Repo Selector -->
+            <div class="brand-unit">
+                <div class="brand-logo">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M12 3v6m0 6v6M3 12h6m6 0h6"></path>
+                    </svg>
+                </div>
+                <div class="repo-selector">
+                    <span class="org-name">Ayushgupta1715</span>
+                    <span class="divider">/</span>
+                    <span class="repo-name">gitgraph-sentinel</span>
+                    <span class="branch-pill">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="6" y1="3" x2="6" y2="15"></line>
+                            <circle cx="18" cy="6" r="3"></circle>
+                            <circle cx="6" cy="18" r="3"></circle>
+                            <path d="M18 9a9 9 0 0 1-9 9"></path>
+                        </svg>
+                        main
+                    </span>
+                </div>
             </div>
         </div>
-        
-        <div class="top-stats">
-            <!-- Scan Status Indicator -->
-            <div class="status-indicator ready" id="scan-status-badge">
-                <span class="status-dot"></span>
-                <span class="status-label" id="scan-status-text">ANALYSIS COMPLETE</span>
+
+        <div class="header-right">
+            <!-- Security Posture Badge -->
+            <div class="posture-summary">
+                <span class="threat-dot alert"></span>
+                <span class="threat-label">1 Active Vulnerability</span>
             </div>
 
-            <!-- Database Engine Mode -->
-            <div class="meta-pill" id="db-status">
+            <!-- FalkorDB Engine Status -->
+            <div class="engine-badge" id="db-status">
+                <span class="db-indicator"></span>
+                <span id="db-status-text">FalkorDB Connected</span>
+            </div>
+
+            <!-- Rescan Trigger -->
+            <button class="header-btn" id="btn-rescan" onclick="scanCodebase()" title="Re-index Codebase AST">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <ellipse cx="12" cy="5" rx="9" ry="3"></ellipse>
-                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path>
-                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path>
+                    <path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path>
                 </svg>
-                <span id="db-status-text">FalkorDB Engine</span>
-            </div>
-
-            <!-- Graph Topology Counter -->
-            <div class="meta-pill topology-pill">
-                <span class="num" id="node-count">24</span> <span class="lbl">Nodes</span>
-                <span class="sep">/</span>
-                <span class="num" id="edge-count">47</span> <span class="lbl">Edges</span>
-            </div>
-
-            <!-- Re-Scan Action -->
-            <button class="btn btn-secondary btn-sm" id="btn-rescan" onclick="scanCodebase()">
-                <svg class="icon-svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
-                </svg>
-                <span>Re-Scan Codebase</span>
+                <span>Re-index AST</span>
             </button>
         </div>
     </header>
 
-    <!-- Main Grid Workspace -->
-    <main class="main-layout">
-        <!-- Center / Left: Graph Explorer Canvas -->
-        <section class="graph-section">
-            <div class="section-toolbar">
-                <div class="toolbar-left">
-                    <span class="section-title">Topology Explorer</span>
-                    
-                    <!-- Search input with vector icon -->
-                    <div class="search-field">
-                        <svg class="search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg>
-                        <input type="text" id="node-search" placeholder="Filter by node name or module..." oninput="searchNodes(this.value)">
-                    </div>
-                </div>
-
-                <!-- Structured Legend -->
-                <div class="topology-legend">
-                    <span class="legend-entry"><span class="swatch file"></span>File</span>
-                    <span class="legend-entry"><span class="swatch route"></span>Route</span>
-                    <span class="legend-entry"><span class="swatch func"></span>Function</span>
-                    <span class="legend-entry"><span class="swatch model"></span>Sensitive Model</span>
-                </div>
-            </div>
-
-            <!-- Cytoscape Graph Canvas -->
-            <div id="cy" class="graph-canvas"></div>
-
-            <!-- Node Hover Tooltip -->
-            <div id="graph-tooltip" class="graph-tooltip hidden"></div>
-
-            <!-- Floating Action Control Strip -->
-            <div class="graph-floating-controls">
-                <button class="control-btn" onclick="zoomIn()" title="Zoom In (+)">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                </button>
-                <button class="control-btn" onclick="zoomOut()" title="Zoom Out (−)">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                </button>
-                <button class="control-btn" onclick="fitGraph()" title="Fit Viewport">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"></path></svg>
-                </button>
-                <button class="control-btn" onclick="switchLayout('tiered')" title="Tiered Architectural Layout">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-                </button>
-                <button class="control-btn" onclick="resetGraphView()" title="Reset Focus & Filters">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
-                </button>
-            </div>
-
-            <!-- Bottom: FalkorDB Cypher Inspector Drawer -->
-            <div class="cypher-drawer">
-                <div class="drawer-header" onclick="toggleInspector()">
-                    <div class="drawer-meta">
-                        <span class="drawer-tag">FALKORDB CYPHER</span>
-                        <span class="drawer-count" id="query-count-badge">Live Queries</span>
-                    </div>
-                    <span class="drawer-toggle" id="inspector-chevron">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="18 15 12 9 6 15"></polyline></svg>
-                    </span>
-                </div>
-                <div class="drawer-content" id="inspector-body">
-                    <div id="cypher-history-list" class="cypher-history-list"></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Right: Agent Reasoner & Investigation Center -->
-        <aside class="agent-panel">
-            <div class="panel-header">
-                <div>
-                    <h2>Agent Reasoning Engine</h2>
-                    <p class="panel-subtitle">Multi-hop graph decisions & autonomous remediation</p>
-                </div>
-                <span class="agent-status-badge">Active</span>
-            </div>
-
-            <!-- 1. Vulnerability Findings -->
-            <div class="surface-group">
-                <div class="surface-header">
-                    <div class="surface-title-wrap">
-                        <svg class="surface-icon danger" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                        </svg>
-                        <h3>Vulnerability Triage</h3>
-                    </div>
-                    <span class="badge-alert" id="finding-count-tag">1 Detected</span>
-                </div>
-                
-                <p class="surface-desc">Autonomous traversal over AST code relationships detects unauthenticated routes modifying critical assets.</p>
-                
-                <div class="action-btn-row">
-                    <button class="btn btn-primary w-100" id="btn-triage" onclick="runInvestigation()">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                        </svg>
-                        <span>Re-Run Graph Triage</span>
+    <!-- App Body: Split Workbench -->
+    <div class="workbench">
+        <!-- Main Stage: Graph Canvas & View Controls -->
+        <div class="stage-container">
+            <!-- Canvas Toolbar -->
+            <div class="canvas-bar">
+                <div class="canvas-tabs">
+                    <button class="canvas-tab active" id="tab-graph" onclick="setActiveTab('graph')">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                        Topology Graph
+                        <span class="badge-count" id="node-edge-summary">24 Nodes &bull; 47 Edges</span>
+                    </button>
+                    <button class="canvas-tab" id="tab-cypher" onclick="toggleInspector()">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 17 10 11 4 5"></polyline><line x1="12" y1="19" x2="20" y2="19"></line></svg>
+                        Cypher Console
                     </button>
                 </div>
 
-                <div id="findings-container" class="findings-container">
-                    <!-- Populated dynamically -->
-                </div>
-            </div>
+                <div class="canvas-actions">
+                    <div class="filter-input-wrap">
+                        <svg class="search-ico" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" id="node-search" placeholder="Filter entities..." oninput="searchNodes(this.value)">
+                    </div>
 
-            <!-- 2. Blast Radius Impact Engine -->
-            <div class="surface-group">
-                <div class="surface-header">
-                    <div class="surface-title-wrap">
-                        <svg class="surface-icon warning" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="8" x2="12" y2="12"></line>
-                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                        </svg>
-                        <h3>Blast Radius Impact Engine</h3>
+                    <div class="btn-group">
+                        <button class="tool-action-btn" onclick="zoomIn()" title="Zoom In">+</button>
+                        <button class="tool-action-btn" onclick="zoomOut()" title="Zoom Out">−</button>
+                        <button class="tool-action-btn" onclick="fitGraph()" title="Fit View">Fit</button>
+                        <button class="tool-action-btn" onclick="resetGraphView()" title="Reset Focus">Reset</button>
                     </div>
                 </div>
-                <p class="surface-desc">Evaluates upstream dependencies and breaking API changes before modifying critical code.</p>
-
-                <div class="input-row">
-                    <select id="blast-target" class="form-select" onchange="runBlastRadius()">
-                        <option value="verify_jwt">verify_jwt (auth.py)</option>
-                        <option value="process_refund">process_refund (payment.py)</option>
-                        <option value="LedgerModel.update_balance">LedgerModel.update_balance (db.py)</option>
-                        <option value="calculate_tax">calculate_tax (payment.py)</option>
-                        <option value="check_permission">check_permission (auth.py)</option>
-                    </select>
-                    <button class="btn btn-outline" onclick="runBlastRadius()">Scan Impact</button>
-                </div>
-
-                <div id="blast-results-container" class="blast-results-container">
-                    <!-- Populated dynamically -->
-                </div>
             </div>
 
-            <!-- 3. Reasoning Timeline & Execution Log -->
-            <div class="surface-group flex-1 flex-col">
-                <div class="surface-header">
-                    <div class="surface-title-wrap">
-                        <svg class="surface-icon accent" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                        </svg>
-                        <h3>Agent Reasoning Timeline</h3>
-                    </div>
-                </div>
+            <!-- Cytoscape Container -->
+            <div id="cy" class="graph-viewport"></div>
 
-                <div id="action-timeline" class="action-timeline">
-                    <!-- Real-time timeline steps -->
-                </div>
+            <!-- Graph Legend Strip (Bottom-Left) -->
+            <div class="viewport-legend">
+                <span class="legend-chip"><span class="legend-dot file"></span> Module (File)</span>
+                <span class="legend-chip"><span class="legend-dot route"></span> HTTP Route</span>
+                <span class="legend-chip"><span class="legend-dot func"></span> Internal Function</span>
+                <span class="legend-chip"><span class="legend-dot model"></span> Database Model</span>
             </div>
-        </aside>
-    </main>
 
-    <!-- Modal 1: Code Evidence Viewer -->
-    <div id="evidence-modal" class="modal-backdrop hidden" onclick="handleBackdropClick(event, 'evidence-modal')">
-        <div class="modal-card">
-            <div class="modal-header">
-                <div class="modal-title-group">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                    </svg>
-                    <h3 id="evidence-title">AST Source Code Evidence</h3>
+            <!-- Node Hover Tooltip -->
+            <div id="graph-tooltip" class="system-tooltip hidden"></div>
+
+            <!-- Bottom Cypher Terminal Drawer -->
+            <div class="cypher-drawer hidden" id="inspector-body">
+                <div class="drawer-topline">
+                    <span class="drawer-title">FalkorDB Cypher Telemetry & Execution Log</span>
+                    <button class="drawer-close" onclick="toggleInspector()">&times;</button>
                 </div>
-                <button class="close-btn" onclick="closeModal('evidence-modal')" aria-label="Close">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <div id="cypher-history-list" class="cypher-feed"></div>
+            </div>
+        </div>
+
+        <!-- Right Sidebar: Triage & Security Inspection Workbench -->
+        <aside class="sidebar-inspector">
+            <!-- Sidebar Tab Navigation -->
+            <div class="sidebar-nav">
+                <button class="side-tab active" id="btn-tab-triage" onclick="switchSidebarTab('triage')">
+                    Security Findings
+                    <span class="indicator-pill" id="finding-count-tag">1</span>
+                </button>
+                <button class="side-tab" id="btn-tab-blast" onclick="switchSidebarTab('blast')">
+                    Blast Radius
+                </button>
+                <button class="side-tab" id="btn-tab-audit" onclick="switchSidebarTab('audit')">
+                    Agent Audit Log
                 </button>
             </div>
-            <div class="modal-body">
-                <div class="evidence-meta" id="evidence-meta"></div>
-                <p class="evidence-explanation" id="evidence-explanation"></p>
-                <div class="code-view">
+
+            <!-- Pane 1: Security Triage Pane -->
+            <div class="sidebar-pane active" id="pane-triage">
+                <div class="pane-action-bar">
+                    <span class="pane-heading">Incident Analysis</span>
+                    <button class="btn-subtle" onclick="runInvestigation()">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"></path></svg>
+                        Re-evaluate
+                    </button>
+                </div>
+
+                <div id="findings-container" class="findings-list">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+
+            <!-- Pane 2: Blast Radius Impact Engine Pane -->
+            <div class="sidebar-pane" id="pane-blast">
+                <div class="pane-action-bar">
+                    <span class="pane-heading">Change Impact Analysis</span>
+                </div>
+                <p class="pane-instruction">Select a function to compute reverse dependency blast radius before refactoring.</p>
+                
+                <div class="select-bar">
+                    <select id="blast-target" class="custom-select" onchange="runBlastRadius()">
+                        <option value="verify_jwt">auth.py &bull; verify_jwt()</option>
+                        <option value="process_refund">payment.py &bull; process_refund()</option>
+                        <option value="LedgerModel.update_balance">db.py &bull; LedgerModel.update_balance()</option>
+                        <option value="calculate_tax">payment.py &bull; calculate_tax()</option>
+                        <option value="check_permission">auth.py &bull; check_permission()</option>
+                    </select>
+                    <button class="btn-primary-sm" onclick="runBlastRadius()">Evaluate</button>
+                </div>
+
+                <div id="blast-results-container"></div>
+            </div>
+
+            <!-- Pane 3: Agent Audit Log & Reasoning -->
+            <div class="sidebar-pane" id="pane-audit">
+                <div class="pane-action-bar">
+                    <span class="pane-heading">Autonomous Action History</span>
+                </div>
+                <div id="action-timeline" class="audit-feed"></div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Modal: Source Code Evidence View -->
+    <div id="evidence-modal" class="modal-overlay hidden" onclick="handleBackdropClick(event, 'evidence-modal')">
+        <div class="modal-dialog">
+            <div class="dialog-header">
+                <div class="dialog-title-group">
+                    <span class="badge-evidence">AST EVIDENCE</span>
+                    <h3 id="evidence-title">routes.py</h3>
+                </div>
+                <button class="modal-close-btn" onclick="closeModal('evidence-modal')">&times;</button>
+            </div>
+            <div class="dialog-body">
+                <div class="meta-row" id="evidence-meta"></div>
+                <p class="explanation-text" id="evidence-explanation"></p>
+                <div class="code-editor-surface">
                     <pre><code id="evidence-code"></code></pre>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('evidence-modal')">Close</button>
-                <button class="btn btn-primary" onclick="switchToFixPreview()">Review Safe Fix</button>
+            <div class="dialog-footer">
+                <button class="btn-ghost" onclick="closeModal('evidence-modal')">Close</button>
+                <button class="btn-accent" onclick="switchToFixPreview()">Generate Patch Proposal</button>
             </div>
         </div>
     </div>
 
-    <!-- Modal 2: Safe Fix Preview (Side-by-Side Diff) -->
-    <div id="fix-modal" class="modal-backdrop hidden" onclick="handleBackdropClick(event, 'fix-modal')">
-        <div class="modal-card modal-wide">
-            <div class="modal-header">
-                <div class="modal-title-group">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                    </svg>
-                    <h3>Safe Fix Preview & Reviewable Diff</h3>
+    <!-- Modal: Safe Fix Proposal Diff -->
+    <div id="fix-modal" class="modal-overlay hidden" onclick="handleBackdropClick(event, 'fix-modal')">
+        <div class="modal-dialog modal-lg">
+            <div class="dialog-header">
+                <div class="dialog-title-group">
+                    <span class="badge-patch">PATCH PROPOSAL</span>
+                    <h3>Remediation Diff &bull; routes.py</h3>
                 </div>
-                <button class="close-btn" onclick="closeModal('fix-modal')" aria-label="Close">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                </button>
+                <button class="modal-close-btn" onclick="closeModal('fix-modal')">&times;</button>
             </div>
-            <div class="modal-body">
-                <div class="fix-callout" id="fix-summary">
-                    <strong>Autonomous Remediation:</strong> Enforces JWT authentication middleware into the vulnerable route handler to verify caller credentials before invoking downstream financial models.
+            <div class="dialog-body">
+                <div class="patch-summary-banner" id="fix-summary">
+                    Enforces JWT authentication middleware into the unauthenticated route handler to verify caller claims before invoking downstream financial models.
                 </div>
-                
-                <div class="diff-grid">
-                    <div class="diff-box original">
-                        <div class="diff-box-head">Original Code (Vulnerable)</div>
+
+                <div class="diff-split">
+                    <div class="diff-file-side original">
+                        <div class="diff-file-header">routes.py (Current)</div>
                         <pre><code id="diff-original"></code></pre>
                     </div>
-                    <div class="diff-box patched">
-                        <div class="diff-box-head">Proposed Fix (Verified)</div>
+                    <div class="diff-file-side patched">
+                        <div class="diff-file-header">routes.py (Proposed Solution)</div>
                         <pre><code id="diff-patched"></code></pre>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="closeModal('fix-modal')">Cancel</button>
-                <button class="btn btn-action" id="btn-apply-patch" onclick="confirmApplyPatch()">
-                    Apply Patch & Re-Verify Graph
+            <div class="dialog-footer">
+                <button class="btn-ghost" onclick="closeModal('fix-modal')">Discard</button>
+                <button class="btn-commit" id="btn-apply-patch" onclick="confirmApplyPatch()">
+                    Commit Patch & Re-index
                 </button>
             </div>
         </div>
