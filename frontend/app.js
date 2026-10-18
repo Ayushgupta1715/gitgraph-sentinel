@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadStatus();
     await loadGraph();
     await loadQueryHistory();
-    // Auto-run initial triage so judges immediately see findings!
+    // Auto-run initial triage
     await runInvestigation();
     // Auto-run initial blast radius
     await runBlastRadius();
@@ -19,11 +19,23 @@ document.addEventListener("DOMContentLoaded", async () => {
             cy.fit(null, 50);
         }
     });
+
+    // Close modals on Escape key (Craft floor accessibility)
+    window.addEventListener('keydown', (e) => {
+        if (e.key === "Escape") {
+            closeModal('evidence-modal');
+            closeModal('fix-modal');
+        }
+    });
 });
 
-function setScanStatus(statusText, colorClass = "ready") {
+function setScanStatus(statusText, isReady = true) {
     const textEl = document.getElementById("scan-status-text");
+    const badgeEl = document.getElementById("scan-status-badge");
     if (textEl) textEl.innerText = statusText;
+    if (badgeEl) {
+        badgeEl.className = isReady ? "status-indicator ready" : "status-indicator";
+    }
 }
 
 function initCytoscape() {
@@ -43,16 +55,17 @@ function initCytoscape() {
                     'text-valign': 'bottom',
                     'text-margin-y': '6px',
                     'text-wrap': 'wrap',
-                    'text-max-width': '110px',
-                    'background-color': '#334155',
-                    'border-width': 2,
-                    'border-color': 'rgba(255,255,255,0.18)',
-                    'width': 36,
-                    'height': 36,
-                    'text-outline-color': '#060911',
-                    'text-outline-width': 3,
+                    'text-max-width': '100px',
+                    'background-color': '#1e293b',
+                    'border-width': 1.5,
+                    'border-color': 'rgba(255, 255, 255, 0.2)',
+                    'width': 34,
+                    'height': 34,
+                    'text-outline-color': '#060912',
+                    'text-outline-width': 2.5,
                     'transition-property': 'background-color, border-color, width, height, opacity',
-                    'transition-duration': '0.25s'
+                    'transition-duration': '0.2s',
+                    'transition-timing-function': 'cubic-bezier(0.16, 1, 0.3, 1)'
                 }
             },
             {
@@ -60,43 +73,43 @@ function initCytoscape() {
                 style: {
                     'background-color': '#2563eb',
                     'shape': 'round-rectangle',
-                    'width': 54,
-                    'height': 32
+                    'width': 48,
+                    'height': 30
                 }
             },
             {
                 selector: 'node[type = "Function"]',
                 style: {
-                    'background-color': '#10b981',
+                    'background-color': '#059669',
                     'shape': 'ellipse',
-                    'width': 34,
-                    'height': 34
+                    'width': 32,
+                    'height': 32
                 }
             },
             {
                 selector: 'node[type = "RouteHandler"]',
                 style: {
-                    'background-color': '#f59e0b',
+                    'background-color': '#d97706',
                     'shape': 'hexagon',
-                    'width': 44,
-                    'height': 44
+                    'width': 40,
+                    'height': 40
                 }
             },
             {
                 selector: 'node[type = "Model"]',
                 style: {
-                    'background-color': '#ec4899',
+                    'background-color': '#e11d48',
                     'shape': 'diamond',
-                    'width': 44,
-                    'height': 44
+                    'width': 42,
+                    'height': 42
                 }
             },
-            /* Clean, Subtle Connecting Edges (No harsh white webs) */
+            /* Refined Connecting Edges */
             {
                 selector: 'edge',
                 style: {
                     'curve-style': 'bezier',
-                    'width': 1.4,
+                    'width': 1.2,
                     'target-arrow-shape': 'triangle',
                     'line-color': 'rgba(100, 116, 139, 0.28)',
                     'target-arrow-color': 'rgba(100, 116, 139, 0.4)',
@@ -106,13 +119,12 @@ function initCytoscape() {
                     'font-size': '8px',
                     'color': '#38bdf8',
                     'text-rotation': 'autorotate',
-                    'text-margin-y': -8,
-                    'text-opacity': 0, /* Hidden by default to prevent visual clutter! */
+                    'text-margin-y': -7,
+                    'text-opacity': 0,
                     'transition-property': 'line-color, target-arrow-color, width, text-opacity, opacity',
-                    'transition-duration': '0.25s'
+                    'transition-duration': '0.2s'
                 }
             },
-            /* Hover/Focus Edge display */
             {
                 selector: 'edge:selected, edge.active-edge',
                 style: {
@@ -122,45 +134,42 @@ function initCytoscape() {
                     'width': 2.2
                 }
             },
-            /* Dimmed background */
             {
                 selector: '.dimmed',
                 style: {
                     'opacity': 0.08
                 }
             },
-            /* Attack Path Highlight (Neon Crimson) */
             {
                 selector: '.attack-node',
                 style: {
-                    'background-color': '#ef4444',
+                    'background-color': '#f43f5e',
                     'border-color': '#ffffff',
-                    'border-width': 4,
-                    'width': 50,
-                    'height': 50,
+                    'border-width': 3,
+                    'width': 46,
+                    'height': 46,
                     'opacity': 1
                 }
             },
             {
                 selector: '.attack-edge',
                 style: {
-                    'line-color': '#ef4444',
-                    'target-arrow-color': '#ef4444',
-                    'width': 3.6,
+                    'line-color': '#f43f5e',
+                    'target-arrow-color': '#f43f5e',
+                    'width': 3.2,
                     'text-opacity': 1,
                     'color': '#fca5a5',
                     'opacity': 1
                 }
             },
-            /* Blast Radius Highlights */
             {
                 selector: '.blast-target',
                 style: {
-                    'background-color': '#ef4444',
+                    'background-color': '#f43f5e',
                     'border-color': '#ffffff',
-                    'border-width': 4,
-                    'width': 50,
-                    'height': 50,
+                    'border-width': 3,
+                    'width': 46,
+                    'height': 46,
                     'opacity': 1
                 }
             },
@@ -169,9 +178,9 @@ function initCytoscape() {
                 style: {
                     'background-color': '#f97316',
                     'border-color': '#ffedd5',
-                    'border-width': 3,
-                    'width': 44,
-                    'height': 44,
+                    'border-width': 2.5,
+                    'width': 40,
+                    'height': 40,
                     'opacity': 1
                 }
             },
@@ -180,29 +189,27 @@ function initCytoscape() {
                 style: {
                     'background-color': '#eab308',
                     'border-color': '#fef08a',
-                    'border-width': 2.5,
-                    'width': 38,
-                    'height': 38,
+                    'border-width': 2,
+                    'width': 36,
+                    'height': 36,
                     'opacity': 1
                 }
             }
         ]
     });
 
-    // Node Tap Focus
     cy.on('tap', 'node', function(evt){
         const node = evt.target;
         focusOnNode(node);
     });
 
-    // Background Click Reset
     cy.on('tap', function(evt){
         if (evt.target === cy) {
             resetGraphView();
         }
     });
 
-    // Hover Tooltip & Edge Label
+    // Tooltip
     const tooltip = document.getElementById('graph-tooltip');
     cy.on('mouseover', 'node', function(evt){
         const node = evt.target;
@@ -210,13 +217,15 @@ function initCytoscape() {
         const renderedPos = node.renderedPosition();
 
         tooltip.innerHTML = `
-            <strong>${d.label}</strong><br>
-            <span style="color: #94a3b8;">Type:</span> ${d.type}<br>
-            <span style="color: #94a3b8;">File:</span> ${d.properties.file || d.properties.path || 'module'}<br>
-            ${d.properties.start_line ? `<span style="color: #94a3b8;">Lines:</span> ${d.properties.start_line}-${d.properties.end_line}` : ''}
+            <div style="font-weight: 700; color: #ffffff;">${d.label}</div>
+            <div style="color: #94a3b8; font-size: 0.68rem; margin-top: 2px;">
+                <span>Type:</span> <span style="color: #e2e8f0;">${d.type}</span> &bull; 
+                <span>File:</span> <span style="color: #e2e8f0;">${d.properties.file || d.properties.path || 'module'}</span>
+            </div>
+            ${d.properties.start_line ? `<div style="color: #94a3b8; font-size: 0.68rem;">Lines: ${d.properties.start_line}-${d.properties.end_line}</div>` : ''}
         `;
-        tooltip.style.left = `${renderedPos.x + 20}px`;
-        tooltip.style.top = `${renderedPos.y - 10}px`;
+        tooltip.style.left = `${renderedPos.x + 18}px`;
+        tooltip.style.top = `${renderedPos.y - 12}px`;
         tooltip.classList.remove('hidden');
     });
 
@@ -244,7 +253,7 @@ function focusOnNode(node) {
     connectedEdges.removeClass('dimmed').addClass('active-edge');
 
     const d = node.data();
-    addTimelineStep("Node Inspected", `[${d.type}] ${d.label} in ${d.properties.file || 'module'}`, "info");
+    addTimelineStep("Node Focus", `[${d.type}] ${d.label} (${d.properties.file || 'module'})`, "info");
 }
 
 async function loadStatus() {
@@ -255,9 +264,6 @@ async function loadStatus() {
         document.getElementById("db-status-text").innerText = data.mode;
         document.getElementById("node-count").innerText = data.nodes;
         document.getElementById("edge-count").innerText = data.edges;
-
-        const dot = document.querySelector("#scan-status-badge .status-pulse-dot");
-        if (dot) dot.style.background = "#10b981";
     } catch (e) {
         console.error("Status fetch error:", e);
     }
@@ -293,20 +299,20 @@ function renderQueryHistory(queries) {
     countBadge.innerText = `${queries.length} Queries Recorded`;
 
     if (!queries || queries.length === 0) {
-        list.innerHTML = `<div style="color: #64748b;">No Cypher queries recorded yet.</div>`;
+        list.innerHTML = `<div style="color: #64748b; font-size: 0.68rem;">No Cypher queries recorded yet.</div>`;
         return;
     }
 
     list.innerHTML = queries.map(q => `
         <div class="query-entry">
             <code>${q.query}</code>
-            <span class="query-meta">${q.duration_ms}ms | ${q.records} records [${q.timestamp}]</span>
+            <span class="query-meta">${q.duration_ms}ms &bull; ${q.records} records [${q.timestamp}]</span>
         </div>
     `).join("");
 }
 
 async function scanCodebase() {
-    setScanStatus("SCANNING REPO...");
+    setScanStatus("SCANNING REPO...", false);
     addTimelineStep("Codebase Scan", "Parsing Python AST and indexing graph...", "info");
     try {
         const res = await fetch("/api/scan", { method: "POST" });
@@ -316,19 +322,15 @@ async function scanCodebase() {
         await loadStatus();
         await loadQueryHistory();
         addTimelineStep("FalkorDB Synced", `Indexed ${data.ingest_result.node_count} nodes & ${data.ingest_result.edge_count} relationships (${data.ingest_result.ingest_time_ms}ms)`, "action");
-        setScanStatus("ANALYSIS COMPLETE");
+        setScanStatus("ANALYSIS COMPLETE", true);
     } catch (e) {
         addTimelineStep("Scan Failed", e.toString(), "alert");
-        setScanStatus("SCAN FAILED");
+        setScanStatus("SCAN FAILED", false);
     }
 }
 
 /**
- * 🌟 Spaced Tiered Architectural Column Layout:
- * Col 0: Files (Left)
- * Col 1: Route Handlers
- * Col 2: Business Logic Functions
- * Col 3: Database Models (Right)
+ * 🌟 Spaced Tiered Architectural Column Layout
  */
 function applyTieredLayout() {
     if (!cy) return;
@@ -340,15 +342,15 @@ function applyTieredLayout() {
 
     const colX = {
         files: 60,
-        routes: 320,
-        functions: 600,
-        models: 880
+        routes: 300,
+        functions: 560,
+        models: 820
     };
 
     function layoutColumn(collection, x) {
         const count = collection.length;
         if (count === 0) return;
-        const totalHeight = 540;
+        const totalHeight = 520;
         const step = count > 1 ? totalHeight / (count - 1) : totalHeight / 2;
         const startY = 40;
 
@@ -365,7 +367,7 @@ function applyTieredLayout() {
     layoutColumn(functions, colX.functions);
     layoutColumn(models, colX.models);
 
-    cy.fit(null, 50);
+    cy.fit(null, 45);
 }
 
 function renderCytoscape(graphData) {
@@ -417,7 +419,6 @@ function switchLayout(mode) {
     }
 }
 
-// Search Filter
 function searchNodes(query) {
     if (!cy) return;
     resetGraphView();
@@ -435,7 +436,7 @@ function searchNodes(query) {
 
 // 🛡️ Multi-Hop Investigation (Evidence-Based)
 async function runInvestigation() {
-    setScanStatus("TRIAGING GRAPH...");
+    setScanStatus("TRIAGING GRAPH...", false);
     addTimelineStep("Agent Reasoning", "Executing Cypher: (r:RouteHandler {has_auth: false})-[:CALLS*]->(m:Model)", "info");
     const container = document.getElementById("findings-container");
 
@@ -451,19 +452,24 @@ async function runInvestigation() {
 
         if (data.findings.length === 0) {
             container.innerHTML = `
-                <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; border-radius: 8px; padding: 12px; font-size: 0.78rem; color: #6ee7b7;">
-                    ✅ <strong>All Access Paths Verified!</strong> Zero unauthenticated routes reaching sensitive models.
+                <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; padding: 10px 12px; font-size: 0.74rem; color: #6ee7b7;">
+                    <strong>All Access Paths Verified:</strong> Zero unauthenticated routes reaching sensitive models.
                 </div>
             `;
-            document.getElementById("finding-count-tag").innerText = "0 Detected";
-            document.getElementById("finding-count-tag").style.color = "#10b981";
-            setScanStatus("VERIFIED SECURE");
+            const tag = document.getElementById("finding-count-tag");
+            tag.innerText = "0 Detected";
+            tag.className = "badge-alert";
+            tag.style.background = "rgba(16, 185, 129, 0.15)";
+            tag.style.color = "#6ee7b7";
+            tag.style.borderColor = "rgba(16, 185, 129, 0.3)";
+            setScanStatus("VERIFIED SECURE", true);
             return;
         }
 
         activeFinding = data.findings[0];
-        document.getElementById("finding-count-tag").innerText = `${data.findings.length} Detected`;
-        document.getElementById("finding-count-tag").style.color = "#ef4444";
+        const tag = document.getElementById("finding-count-tag");
+        tag.innerText = `${data.findings.length} Detected`;
+        tag.className = "badge-alert";
 
         let html = "";
         data.findings.forEach((f, idx) => {
@@ -499,30 +505,30 @@ async function runInvestigation() {
 
                     <div class="finding-actions-grid">
                         <button class="btn btn-secondary" onclick="viewEvidence(${idx})">
-                            📜 View Evidence
+                            View Evidence
                         </button>
                         <button class="btn btn-outline" onclick="showAttackPath(${idx})">
-                            🎯 Show Attack Path
+                            Show Attack Path
                         </button>
                     </div>
 
-                    <button class="btn btn-action w-100" style="margin-top: 8px; font-size: 0.74rem;" onclick="openFixPreview(${idx})">
-                        🛡️ Review & Apply Safe Fix
+                    <button class="btn btn-action w-100" style="margin-top: 8px; font-size: 0.72rem;" onclick="openFixPreview(${idx})">
+                        Review & Apply Safe Fix
                     </button>
                 </div>
             `;
         });
 
         container.innerHTML = html;
-        setScanStatus("ANALYSIS COMPLETE");
+        setScanStatus("ANALYSIS COMPLETE", true);
 
     } catch (e) {
         addTimelineStep("Investigation Error", e.toString(), "alert");
-        setScanStatus("ANALYSIS FAILED");
+        setScanStatus("ANALYSIS FAILED", false);
     }
 }
 
-// 🎯 Show Attack Path (Key Hackathon Feature)
+// 🎯 Show Attack Path
 function showAttackPath(index) {
     if (!currentInvestigation || !currentInvestigation.findings[index]) return;
     const f = currentInvestigation.findings[index];
@@ -530,7 +536,6 @@ function showAttackPath(index) {
 
     cy.elements().addClass('dimmed');
 
-    // Highlight nodes in attack path
     const pathNodes = [];
     f.path_ids.forEach(id => {
         const node = cy.getElementById(id);
@@ -540,7 +545,6 @@ function showAttackPath(index) {
         }
     });
 
-    // Highlight connecting edges
     for (let i = 0; i < f.path_ids.length - 1; i++) {
         const src = f.path_ids[i];
         const tgt = f.path_ids[i + 1];
@@ -557,9 +561,9 @@ function showAttackPath(index) {
         cy.animate({
             fit: {
                 eles: cy.collection(pathNodes),
-                padding: 70
+                padding: 60
             },
-            duration: 400
+            duration: 350
         });
     }
 }
@@ -603,7 +607,7 @@ async function confirmApplyPatch() {
     if (!activeFinding) return;
     closeModal("fix-modal");
     
-    setScanStatus("APPLYING PATCH...");
+    setScanStatus("APPLYING PATCH...", false);
     addTimelineStep("Patch Injection", `Injecting verified JWT verification middleware into '${activeFinding.entry_point}'...`, "info");
     
     try {
@@ -626,7 +630,6 @@ async function confirmApplyPatch() {
             await loadQueryHistory();
         }
 
-        // Re-run investigation to confirm path is securely closed!
         setTimeout(() => {
             runInvestigation();
         }, 800);
@@ -650,11 +653,10 @@ async function runBlastRadius() {
         const container = document.getElementById("blast-results-container");
 
         if (data.error) {
-            container.innerHTML = `<p style="color: #f87171; font-size: 0.75rem;">${data.error}</p>`;
+            container.innerHTML = `<p style="color: #f87171; font-size: 0.72rem;">${data.error}</p>`;
             return;
         }
 
-        // Color coding on graph
         cy.elements().addClass('dimmed');
 
         const highlightedElements = [];
@@ -682,7 +684,7 @@ async function runBlastRadius() {
         container.innerHTML = `
             <div class="blast-summary-card">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-                    <strong style="font-size: 0.8rem; color: #fdba74;">Target: ${target}()</strong>
+                    <strong style="font-size: 0.78rem; color: #ffffff;">Target: ${target}()</strong>
                     <span class="risk-badge ${riskClass}">${data.risk_level} RISK</span>
                 </div>
                 
@@ -705,8 +707,8 @@ async function runBlastRadius() {
                     </div>
                 </div>
 
-                <div style="font-size: 0.72rem; color: #94a3b8; line-height: 1.35; margin-top: 4px;">
-                    <strong>Downstream Risk:</strong> ${data.risk_reason}
+                <div style="font-size: 0.7rem; color: var(--text-secondary); line-height: 1.35; margin-top: 4px;">
+                    <span style="color: var(--text-muted);">Downstream Impact:</span> ${data.risk_reason}
                 </div>
             </div>
         `;
@@ -717,9 +719,9 @@ async function runBlastRadius() {
             cy.animate({
                 fit: {
                     eles: cy.collection(highlightedElements),
-                    padding: 60
+                    padding: 55
                 },
-                duration: 400
+                duration: 350
             });
         }
 
@@ -740,7 +742,7 @@ function addTimelineStep(title, detail, level = "info") {
     item.innerHTML = `
         <span class="timeline-time">[${time}]</span>
         <div class="timeline-content">
-            <strong>✓ ${title}:</strong> ${detail}
+            <strong style="color: #ffffff;">${title}:</strong> ${detail}
         </div>
     `;
     timeline.prepend(item);
@@ -750,15 +752,15 @@ function resetGraphView() {
     if (!cy) return;
     cy.elements().removeClass('dimmed attack-node attack-edge blast-target blast-direct blast-indirect active-edge');
     cy.animate({
-        fit: { padding: 50 },
-        duration: 300
+        fit: { padding: 45 },
+        duration: 250
     });
 }
 
 function fitGraph() {
     if (cy) {
         resetGraphView();
-        cy.fit(null, 50);
+        cy.fit(null, 45);
     }
 }
 
@@ -772,10 +774,15 @@ function zoomOut() {
 
 function toggleInspector() {
     const body = document.getElementById("inspector-body");
-    const chevron = document.getElementById("inspector-toggle");
     body.classList.toggle("hidden");
 }
 
 function closeModal(modalId) {
     document.getElementById(modalId).classList.add("hidden");
+}
+
+function handleBackdropClick(event, modalId) {
+    if (event.target.id === modalId) {
+        closeModal(modalId);
+    }
 }
