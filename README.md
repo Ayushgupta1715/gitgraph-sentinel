@@ -4,7 +4,7 @@
 > Built for the **FalkorDB Hackathon (Track 01: Agents That Act on Connected Data)**
 
 🌐 **Live Demo:** [https://courts-recommend-mumbai-shame.trycloudflare.com](https://courts-recommend-mumbai-shame.trycloudflare.com)  
-🎥 **Demo Video:** [Watch MP4](https://github.com/Ayushgupta1715/gitgraph-sentinel/raw/main/gitgraph_sentinel_demo.mp4)
+🎥 **Demo Video:** [Watch on YouTube](https://youtu.be/Ut3aSnAUs-8)
 
 ---
 
